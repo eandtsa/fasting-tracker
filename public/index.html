@@ -247,6 +247,19 @@
     .nav-day { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
     .hint { font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
     .quote { margin: 4px 0 14px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(135deg,#1f1f1f,#3a1010); color:#fff; font-weight: 800; font-size: 1.08rem; line-height: 1.35; letter-spacing: .01em; border-left: 5px solid #e53935; }
+    .flapclock { display:flex; justify-content:center; align-items:center; gap:4px; margin:8px 0 6px; }
+    .flapclock .sep { font:800 40px/64px ui-monospace,Menlo,monospace; color:#888; padding:0 2px; }
+    .flap { position:relative; width:42px; height:64px; perspective:300px; font:800 46px/64px ui-monospace,Menlo,"SF Mono",monospace; color:#f5f5f5; text-align:center; }
+    .flap .h { position:absolute; left:0; right:0; height:50%; overflow:hidden; background:#1c1c1c; backface-visibility:hidden; }
+    .flap .h > i { display:block; font-style:normal; height:64px; }
+    .flap .t { top:0; border-radius:6px 6px 0 0; transform-origin:50% 100%; background:#262626; }
+    .flap .b { bottom:0; border-radius:0 0 6px 6px; transform-origin:50% 0; }
+    .flap .b > i { margin-top:-32px; }
+    .flap::after { content:""; position:absolute; left:0; right:0; top:50%; height:2px; margin-top:-1px; background:#000; z-index:5; }
+    .flap .ft { z-index:3; animation:flapTop .22s ease-in forwards; }
+    .flap .fb { z-index:3; transform:rotateX(90deg); animation:flapBot .22s .22s ease-out forwards; }
+    @keyframes flapTop { to { transform:rotateX(-90deg); } }
+    @keyframes flapBot { to { transform:rotateX(0deg); } }
   </style>
 </head>
 <body>
@@ -270,7 +283,7 @@
       <div id="activeTimer" class="timer-block" hidden>
         <div class="eat-at" id="eatAtLabel">You can start eating at —</div>
         <div class="meta">Fasting for</div>
-        <div class="elapsed" id="elapsedLabel">00:00:00</div>
+        <div class="flapclock" id="flapClock"></div><div id="elapsedLabel" hidden>00:00:00</div>
         <div class="meta" id="leftLabel">— left to goal</div>
       </div>
       <div class="row" style="margin-top:14px">
@@ -838,6 +851,31 @@ el.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;y0=e.touche
 el.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;
 if(Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy))return;var w=Math.floor(selectedDayIndex/7)+(dx<0?1:-1);if(w<0||w>3)return;
 selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});})();
+</script>
+<script>
+(function(){
+  var box=document.getElementById('flapClock'), cells=[], cur='';
+  function half(cls,ch){return '<span class="h '+cls+'"><i>'+ch+'</i></span>';}
+  function build(str){box.innerHTML='';cells=[];
+    for(var k=0;k<str.length;k++){var c=str[k];
+      if(c===':'){var sp=document.createElement('span');sp.className='sep';sp.textContent=':';box.appendChild(sp);cells.push(null);continue;}
+      var d=document.createElement('span');d.className='flap';d.innerHTML=half('t',c)+half('b',c);box.appendChild(d);cells.push(d);}
+    cur=str;}
+  function flip(d,from,to){
+    d.querySelector('.t>i').textContent=to;
+    d.querySelectorAll('.ft,.fb').forEach(function(e){e.remove();});
+    d.insertAdjacentHTML('beforeend',half('t ft',from)+half('b fb',to));
+    clearTimeout(d._t); d._t=setTimeout(function(){d.querySelector('.b:not(.fb)>i').textContent=to;d.querySelectorAll('.ft,.fb').forEach(function(e){e.remove();});},460);
+  }
+  window.setFlap=function(str){
+    if(str.length!==cur.length){build(str);return;}
+    for(var k=0;k<str.length;k++){if(str[k]!==cur[k]&&cells[k])flip(cells[k],cur[k],str[k]);}
+    cur=str;
+  };
+  var el=document.getElementById('elapsedLabel');
+  new MutationObserver(function(){setFlap(el.textContent);}).observe(el,{childList:true,characterData:true,subtree:true});
+  setFlap(el.textContent);
+})();
 </script>
 </body>
 </html>
