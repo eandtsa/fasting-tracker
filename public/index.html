@@ -246,6 +246,7 @@
     .empty { color: var(--muted); font-size: 0.92rem; padding: 8px 0; }
     .nav-day { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
     .hint { font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
+    .quote { margin: 4px 0 14px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(135deg,#1f1f1f,#3a1010); color:#fff; font-weight: 800; font-size: 1.08rem; line-height: 1.35; letter-spacing: .01em; border-left: 5px solid #e53935; }
   </style>
 </head>
 <body>
@@ -254,6 +255,8 @@
       <h1>Fasting</h1>
       <div class="chip" id="planChip">28-day plan</div>
     </header>
+
+    <div class="quote" id="dailyQuote"></div>
 
     <section class="card" id="tomorrowCard">
       <h2>Tomorrow</h2>
@@ -792,5 +795,42 @@
     }
   })();
   </script>
+<script>
+(function(){
+  var Q=["Hunger is a feeling. Discipline is a decision. Decide.",
+  "Nobody is coming to save you. Get up and do the work.",
+  "You don't need motivation. You need to stop negotiating with yourself.",
+  "The fridge isn't calling you. Your excuses are. Hang up.",
+  "Comfort is the enemy. Chase the hard thing today.",
+  "Every hour you hold the line, the old you gets weaker.",
+  "Soft choices, hard life. Hard choices, strong life.",
+  "You said you'd do it. Prove it to the only person who matters.",
+  "Pain of discipline weighs ounces. Pain of regret weighs tons.",
+  "Stop waiting to feel ready. Ready is a lie. Go.",
+  "Your body is a record of your habits. Write a better one.",
+  "Lazy is a choice you make every day. Choose differently today.",
+  "The scale doesn't care about your feelings. Neither does the race clock.",
+  "Earn the meal. Then earn the next day.",
+  "Tired? Good. That's where the change happens.",
+  "You're 46, not finished. Act like it.",
+  "Average is crowded. Get out of the crowd.",
+  "One bad meal is a meal. One bad week is a choice. Reset now.",
+  "You don't rise to your goals. You fall to your habits. Build better ones.",
+  "Be the guy your kids brag about.",
+  "If it doesn't challenge you, it doesn't change you.",
+  "Dec 12 is coming whether you train or not. Show up ready.",
+  "Excuses don't burn fat. Hours of fasting do.",
+  "Win the morning, win the window, win the day.",
+  "Discipline is doing it when nobody's watching and you don't feel like it.",
+  "The craving lasts minutes. The pride lasts all day.",
+  "Stop bargaining. Start finishing.",
+  "Hard now, easy later. Easy now, hard forever.",
+  "You've survived 100% of your hard days. Add one more.",
+  "Kitchen closes at 8. No appeals."];
+  var d=new Date(), day=Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(2026,10,9))/864e5);
+  var i=((day%Q.length)+Q.length)%Q.length;
+  document.getElementById('dailyQuote').textContent='\u201C'+Q[i]+'\u201D';
+})();
+</script>
 </body>
 </html>
