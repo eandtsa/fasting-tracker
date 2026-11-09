@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Fasting" />
+  <meta name="description" content="28-day intermittent fasting tracker" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <title>Fasting</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --teal: #0f766e;
+      --teal-soft: #ccfbf1;
+      --teal-ink: #115e59;
+      --amber: #b45309;
+      --amber-soft: #fef3c7;
+      --rose: #be123c;
+      --rose-soft: #ffe4e6;
+      --ok: #15803d;
+      --ok-soft: #dcfce7;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --card: #111827;
+        --text: #e5eefb;
+        --muted: #94a3b8;
+        --line: #1f2937;
+        --teal: #2dd4bf;
+        --teal-soft: #134e4a;
+        --teal-ink: #99f6e4;
+        --amber: #fbbf24;
+        --amber-soft: #422006;
+        --rose: #fb7185;
+        --rose-soft: #4c0519;
+        --ok: #4ade80;
+        --ok-soft: #14532d;
+        --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      min-height: 100dvh;
+      padding:
+        calc(12px + env(safe-area-inset-top))
+        calc(14px + env(safe-area-inset-right))
+        calc(24px + env(safe-area-inset-bottom))
+        calc(14px + env(safe-area-inset-left));
+    }
+    .wrap { max-width: 560px; margin: 0 auto; }
+    header.app {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    header.app h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--teal-soft);
+      color: var(--teal-ink);
+      font-size: 0.78rem;
+      font-weight: 650;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 0.92rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .big {
+      font-size: 1.55rem;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin: 4px 0 8px;
+    }
+    .meta { color: var(--muted); font-size: 0.92rem; line-height: 1.45; }
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    button, .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s ease, opacity 0.15s ease;
+    }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--teal);
+      color: #fff;
+      flex: 1;
+      min-width: 140px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .btn-primary { color: #042f2e; }
+    }
+    .btn-danger {
+      background: var(--rose);
+      color: #fff;
+      flex: 1;
+      min-width: 140px;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      font-size: 0.92rem;
+    }
+    .btn-small {
+      padding: 8px 10px;
+      font-size: 0.82rem;
+      border-radius: 10px;
+      background: var(--line);
+      color: var(--text);
+    }
+    .status {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .status.fasting { background: var(--teal-soft); color: var(--teal-ink); }
+    .status.eating { background: var(--ok-soft); color: var(--ok); }
+    .status.closed { background: var(--rose-soft); color: var(--rose); }
+    .status.cheat { background: var(--amber-soft); color: var(--amber); }
+    .timer-block { text-align: center; padding: 8px 0 4px; }
+    .timer-block .elapsed {
+      font-variant-numeric: tabular-nums;
+      font-size: 2.4rem;
+      font-weight: 780;
+      letter-spacing: -0.04em;
+      margin: 6px 0;
+    }
+    .timer-block .eat-at {
+      font-size: 1.25rem;
+      font-weight: 750;
+      margin: 10px 0 4px;
+      line-height: 1.3;
+    }
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 650;
+      flex: 1;
+      min-width: 120px;
+    }
+    input[type="time"], select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 650; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr.today td { background: color-mix(in srgb, var(--teal-soft) 55%, transparent); }
+    tr.override td.start { color: var(--teal); font-weight: 750; }
+    .week-tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .week-tabs button.active {
+      background: var(--teal);
+      color: #fff;
+    }
+    @media (prefers-color-scheme: dark) {
+      .week-tabs button.active { color: #042f2e; }
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .history-item:last-child { border-bottom: 0; }
+    .empty { color: var(--muted); font-size: 0.92rem; padding: 8px 0; }
+    .nav-day { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .hint { font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="app">
+      <h1>Fasting</h1>
+      <div class="chip" id="planChip">28-day plan</div>
+    </header>
+
+    <section class="card" id="tomorrowCard">
+      <h2>Tomorrow</h2>
+      <div class="big" id="tomorrowTitle">—</div>
+      <div class="meta" id="tomorrowMeta">—</div>
+    </section>
+
+    <section class="card" id="timerCard">
+      <h2>Fast timer</h2>
+      <div id="idleTimer" class="meta">No fast running. Tap Start fast when you begin.</div>
+      <div id="activeTimer" class="timer-block" hidden>
+        <div class="eat-at" id="eatAtLabel">You can start eating at —</div>
+        <div class="meta">Fasting for</div>
+        <div class="elapsed" id="elapsedLabel">00:00:00</div>
+        <div class="meta" id="leftLabel">— left to goal</div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn-primary" id="startBtn" type="button">Start fast</button>
+        <button class="btn-danger" id="stopBtn" type="button" disabled>Stop fast</button>
+      </div>
+
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line)">
+        <h2 style="margin-bottom:8px">Adjust start time</h2>
+        <div class="row">
+          <label class="field">Time
+            <input type="time" id="adjustTime" value="23:01" />
+          </label>
+          <label class="field">Day
+            <select id="adjustDay">
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+            </select>
+          </label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn-ghost" id="adjustBtn" type="button">Set start time</button>
+        </div>
+        <div class="hint">Sets the running fast’s start. Creates a running fast if none is active.</div>
+      </div>
+    </section>
+
+    <section class="card" id="dayCard">
+      <h2>Day</h2>
+      <div class="nav-day">
+        <button class="btn-ghost" id="prevDay" type="button">‹ Prev</button>
+        <div style="text-align:center; flex:1">
+          <div class="big" id="dayTitle" style="font-size:1.2rem; margin:0">—</div>
+          <div class="meta" id="daySubtitle">—</div>
+        </div>
+        <button class="btn-ghost" id="nextDay" type="button">Next ›</button>
+      </div>
+      <div class="meta" id="dayWindow">—</div>
+      <div class="status fasting" id="dayStatus">—</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn-small" id="jumpToday" type="button">Jump to today</button>
+      </div>
+    </section>
+
+    <section class="card" id="weekCard">
+      <h2>Plan</h2>
+      <div class="week-tabs" id="weekTabs"></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Type</th>
+              <th>Start</th>
+              <th>End</th>
+            </tr>
+          </thead>
+          <tbody id="weekBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="historyCard">
+      <h2>History</h2>
+      <div id="historyList" class="empty">No completed fasts yet.</div>
+    </section>
+  </div>
+
+  <script>
+  (function () {
+    const STORAGE_KEY = 'fasting-tracker-v1';
+    const PLAN_START = '2026-11-09'; // Monday local
+    const PRESEED_START_ISO = '2026-11-09T04:01:00.000Z'; // 11:01 PM ET Sun Nov 8
+
+    const DAY_TYPES = [
+      '16:8','16:8','18:6','Cheat','16:8','16:8','18:6',
+      '18:6','Cheat','16:8','16:8','18:6','14:10','Cheat',
+      '16:8','16:8','18:6','14:10','Cheat','16:8','18:6',
+      '18:6','14:10','Cheat','16:8','18:6','14:10','16:8'
+    ];
+
+    const OPEN_HOURS = { '16:8': 12, '18:6': 14, '14:10': 10, 'Cheat': null };
+    const CLOSE_HOUR = 20;
+    const GOAL_HOURS = { '16:8': 16, '18:6': 18, '14:10': 14, 'Cheat': 16 };
+
+    const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    let state = loadState();
+    let selectedDayIndex = null; // 0-based plan day
+    let weekView = 0; // 0-3
+    let tickTimer = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            return {
+              runningStart: parsed.runningStart || null,
+              history: Array.isArray(parsed.history) ? parsed.history : []
+            };
+          }
+        }
+      } catch (e) {}
+      // Pre-seed running fast
+      const seeded = { runningStart: PRESEED_START_ISO, history: [] };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded)); } catch (e) {}
+      return seeded;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        alert('Could not save on this device. Storage may be blocked.');
+      }
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function ymdLocal(d) {
+      return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+    }
+
+    function parseYmd(ymd) {
+      const [y,m,day] = ymd.split('-').map(Number);
+      return new Date(y, m-1, day, 0, 0, 0, 0);
+    }
+
+    function addDays(d, n) {
+      const x = new Date(d.getTime());
+      x.setDate(x.getDate() + n);
+      return x;
+    }
+
+    function planDayIndexForDate(d) {
+      const start = parseYmd(PLAN_START);
+      const cur = parseYmd(ymdLocal(d));
+      const diff = Math.round((cur - start) / 86400000);
+      if (diff < 0 || diff > 27) return null;
+      return diff;
+    }
+
+    function dateForPlanDay(index) {
+      return addDays(parseYmd(PLAN_START), index);
+    }
+
+    function formatShortDate(d) {
+      return WEEKDAYS[d.getDay()] + ' ' + MONTHS[d.getMonth()] + ' ' + d.getDate();
+    }
+
+    function formatTime(d) {
+      let h = d.getHours();
+      const m = d.getMinutes();
+      const ap = h >= 12 ? 'PM' : 'AM';
+      h = h % 12;
+      if (h === 0) h = 12;
+      return h + ':' + pad(m) + ' ' + ap;
+    }
+
+    function formatTimeDay(d) {
+      const today = ymdLocal(new Date());
+      const tom = ymdLocal(addDays(new Date(), 1));
+      const y = ymdLocal(d);
+      let dayLabel;
+      if (y === today) dayLabel = 'today';
+      else if (y === tom) dayLabel = 'tomorrow';
+      else dayLabel = formatShortDate(d);
+      return formatTime(d) + ', ' + dayLabel;
+    }
+
+    function plannedOpenHour(type) {
+      if (type === 'Cheat') return null;
+      return OPEN_HOURS[type];
+    }
+
+    function plannedWindow(dayIndex) {
+      const type = DAY_TYPES[dayIndex];
+      const date = dateForPlanDay(dayIndex);
+      const close = new Date(date.getFullYear(), date.getMonth(), date.getDate(), CLOSE_HOUR, 0, 0, 0);
+      if (type === 'Cheat') {
+        return { type, open: null, close, label: 'Cheat day · kitchen closes 8 PM' };
+      }
+      const openH = plannedOpenHour(type);
+      const open = new Date(date.getFullYear(), date.getMonth(), date.getDate(), openH, 0, 0, 0);
+      return { type, open, close, label: type };
+    }
+
+    function goalHoursForFastEnd(endDate) {
+      const idx = planDayIndexForDate(endDate);
+      if (idx == null) return 16;
+      const type = DAY_TYPES[idx];
+      return GOAL_HOURS[type] || 16;
+    }
+
+    function runningFastInfo(now) {
+      if (!state.runningStart) return null;
+      const start = new Date(state.runningStart);
+      if (isNaN(start.getTime())) return null;
+      // Goal hours = plan type of the day the fast ends on = start + goalHours' calendar day.
+      // Spec: Fast goal hours = the plan type of the day the fast ends on (start+16h's plan day; cheat or out of range = 16h).
+      // Interpretation: look at start+16h to pick the day, then use THAT day's type for actual goal hours.
+      const probe = new Date(start.getTime() + 16 * 3600 * 1000);
+      const goalH = goalHoursForFastEnd(probe);
+      // Recheck: if goal is 18, the end day might differ from start+16h day. Spec says use start+16h's plan day.
+      // So goal hours come from the type of (start+16h)'s day.
+      const end = new Date(start.getTime() + goalH * 3600 * 1000);
+      const elapsedMs = Math.max(0, now - start);
+      const leftMs = end - now;
+      return { start, end, goalH, elapsedMs, leftMs, probeDayIndex: planDayIndexForDate(probe) };
+    }
+
+    function overrideOpenForDay(dayIndex, now) {
+      const info = runningFastInfo(now || new Date());
+      if (!info) return null;
+      const endYmd = ymdLocal(info.end);
+      const dayYmd = ymdLocal(dateForPlanDay(dayIndex));
+      if (endYmd !== dayYmd) return null;
+      return info.end;
+    }
+
+    function formatDuration(ms) {
+      const total = Math.floor(Math.max(0, ms) / 1000);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      return pad(h) + ':' + pad(m) + ':' + pad(s);
+    }
+
+    function formatDurationPretty(ms) {
+      const total = Math.floor(Math.max(0, ms) / 1000);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      if (h <= 0) return m + 'm';
+      return h + 'h ' + pad(m) + 'm';
+    }
+
+    function dayStatus(dayIndex, now) {
+      const win = plannedWindow(dayIndex);
+      const overrideOpen = overrideOpenForDay(dayIndex, now);
+      const open = overrideOpen || win.open;
+      const close = win.close;
+      const todayIdx = planDayIndexForDate(now);
+      const isToday = todayIdx === dayIndex;
+
+      if (win.type === 'Cheat') {
+        if (isToday && now >= close) return { text: 'Kitchen closed', cls: 'closed', open, close, override: !!overrideOpen };
+        return { text: 'Cheat day', cls: 'cheat', open, close, override: !!overrideOpen };
+      }
+
+      if (!isToday) {
+        return { text: win.type, cls: 'fasting', open, close, override: !!overrideOpen };
+      }
+
+      if (state.runningStart && now < (runningFastInfo(now)?.end || 0)) {
+        // Still fasting if before eating open for today (override or planned)
+        if (open && now < open) return { text: 'Fasting', cls: 'fasting', open, close, override: !!overrideOpen };
+      }
+      if (open && now < open) return { text: 'Fasting', cls: 'fasting', open, close, override: !!overrideOpen };
+      if (now >= close) return { text: 'Kitchen closed', cls: 'closed', open, close, override: !!overrideOpen };
+      if (open && now >= open && now < close) return { text: 'Eating window open', cls: 'eating', open, close, override: !!overrideOpen };
+      return { text: win.type, cls: 'fasting', open, close, override: !!overrideOpen };
+    }
+
+    function ensureSelected() {
+      if (selectedDayIndex == null) {
+        const t = planDayIndexForDate(new Date());
+        selectedDayIndex = t == null ? 0 : t;
+      }
+      weekView = Math.floor(selectedDayIndex / 7);
+    }
+
+    function renderTomorrow(now) {
+      const tom = addDays(now, 1);
+      const idx = planDayIndexForDate(tom);
+      const elTitle = document.getElementById('tomorrowTitle');
+      const elMeta = document.getElementById('tomorrowMeta');
+      if (idx == null) {
+        elTitle.textContent = 'Outside the 28-day plan';
+        elMeta.textContent = formatShortDate(tom);
+        return;
+      }
+      const win = plannedWindow(idx);
+      const override = overrideOpenForDay(idx, now);
+      const open = override || win.open;
+      elTitle.textContent = 'Day ' + (idx + 1) + ' · ' + win.type;
+      if (win.type === 'Cheat') {
+        elMeta.textContent = formatShortDate(tom) + ' · Cheat day · kitchen closes 8 PM';
+      } else {
+        elMeta.innerHTML =
+          formatShortDate(tom) +
+          '<br>Start eating at <strong>' + formatTime(open) + '</strong>' +
+          (override ? ' <span style="color:var(--teal)">(from your timer)</span>' : '') +
+          '<br>Closes 8 PM · ' + win.type + ' fast';
+      }
+    }
+
+    function renderTimer(now) {
+      const info = runningFastInfo(now);
+      const idle = document.getElementById('idleTimer');
+      const active = document.getElementById('activeTimer');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+
+      if (!info) {
+        idle.hidden = false;
+        active.hidden = true;
+        // Show planned eating time for today when idle
+        const idx = planDayIndexForDate(now);
+        if (idx != null) {
+          const win = plannedWindow(idx);
+          if (win.type === 'Cheat') {
+            idle.textContent = 'No fast running. Today is a cheat day · kitchen closes 8 PM.';
+          } else {
+            idle.textContent = 'No fast running. Planned eating start today: ' + formatTime(win.open) + '.';
+          }
+        } else {
+          idle.textContent = 'No fast running. Tap Start fast when you begin.';
+        }
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        return;
+      }
+
+      idle.hidden = true;
+      active.hidden = false;
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+
+      document.getElementById('eatAtLabel').textContent =
+        'You can start eating at ' + formatTimeDay(info.end);
+      document.getElementById('elapsedLabel').textContent = formatDuration(info.elapsedMs);
+      if (info.leftMs >= 0) {
+        document.getElementById('leftLabel').textContent =
+          formatDuration(info.leftMs) + ' left to ' + info.goalH + '-hour goal';
+      } else {
+        document.getElementById('leftLabel').textContent =
+          'Goal reached · ' + formatDuration(-info.leftMs) + ' past ' + info.goalH + 'h';
+      }
+    }
+
+    function renderDay(now) {
+      ensureSelected();
+      const idx = selectedDayIndex;
+      const date = dateForPlanDay(idx);
+      const win = plannedWindow(idx);
+      const st = dayStatus(idx, now);
+      document.getElementById('dayTitle').textContent = 'Day ' + (idx + 1) + ' · ' + win.type;
+      document.getElementById('daySubtitle').textContent = formatShortDate(date);
+      if (win.type === 'Cheat') {
+        document.getElementById('dayWindow').textContent = 'Cheat day · kitchen closes 8 PM';
+      } else {
+        document.getElementById('dayWindow').textContent =
+          'Eating window: ' + formatTime(st.open) + ' – 8 PM' +
+          (st.override ? ' (start from your timer)' : '');
+      }
+      const badge = document.getElementById('dayStatus');
+      badge.className = 'status ' + st.cls;
+      badge.textContent = st.text;
+      document.getElementById('prevDay').disabled = idx <= 0;
+      document.getElementById('nextDay').disabled = idx >= 27;
+    }
+
+    function renderWeek(now) {
+      ensureSelected();
+      const tabs = document.getElementById('weekTabs');
+      tabs.innerHTML = '';
+      for (let w = 0; w < 4; w++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn-small' + (w === weekView ? ' active' : '');
+        b.textContent = 'Week ' + (w + 1);
+        b.addEventListener('click', () => { weekView = w; render(now); });
+        tabs.appendChild(b);
+      }
+      const body = document.getElementById('weekBody');
+      body.innerHTML = '';
+      const todayIdx = planDayIndexForDate(now);
+      const start = weekView * 7;
+      for (let i = start; i < start + 7; i++) {
+        const win = plannedWindow(i);
+        const st = dayStatus(i, now);
+        const tr = document.createElement('tr');
+        if (i === todayIdx) tr.classList.add('today');
+        if (st.override) tr.classList.add('override');
+        const startText = st.open
+          ? formatTime(st.open)
+          : (win.type === 'Cheat' ? '—' : '—');
+        tr.innerHTML =
+          '<td>D' + (i + 1) + '<div class="meta">' + formatShortDate(dateForPlanDay(i)) + '</div></td>' +
+          '<td>' + win.type + '</td>' +
+          '<td class="start">' + startText + '</td>' +
+          '<td>8 PM</td>';
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => { selectedDayIndex = i; render(new Date()); });
+        body.appendChild(tr);
+      }
+    }
+
+    function renderHistory() {
+      const box = document.getElementById('historyList');
+      if (!state.history.length) {
+        box.className = 'empty';
+        box.textContent = 'No completed fasts yet.';
+        return;
+      }
+      box.className = '';
+      box.innerHTML = '';
+      const items = state.history.slice().reverse();
+      items.forEach((item) => {
+        const start = new Date(item.start);
+        const end = new Date(item.end);
+        const row = document.createElement('div');
+        row.className = 'history-item';
+        row.innerHTML =
+          '<div><strong>' + formatDurationPretty(end - start) + '</strong>' +
+          '<div class="meta">' + formatShortDate(start) + ' ' + formatTime(start) +
+          ' → ' + formatShortDate(end) + ' ' + formatTime(end) + '</div></div>';
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn-small';
+        del.textContent = 'Delete';
+        del.addEventListener('click', () => {
+          state.history = state.history.filter((h) => h.id !== item.id);
+          saveState();
+          render(new Date());
+        });
+        row.appendChild(del);
+        box.appendChild(row);
+      });
+    }
+
+    function renderChip(now) {
+      const idx = planDayIndexForDate(now);
+      const chip = document.getElementById('planChip');
+      if (idx == null) chip.textContent = 'Outside plan';
+      else chip.textContent = 'Day ' + (idx + 1) + ' of 28';
+    }
+
+    function render(now) {
+      now = now || new Date();
+      renderChip(now);
+      renderTomorrow(now);
+      renderTimer(now);
+      renderDay(now);
+      renderWeek(now);
+      renderHistory();
+    }
+
+    function startFast(at) {
+      const when = at || new Date();
+      state.runningStart = when.toISOString();
+      saveState();
+      render(new Date());
+    }
+
+    function stopFast() {
+      if (!state.runningStart) return;
+      const start = new Date(state.runningStart);
+      const end = new Date();
+      state.history.push({
+        id: String(Date.now()) + '-' + Math.random().toString(16).slice(2),
+        start: start.toISOString(),
+        end: end.toISOString()
+      });
+      state.runningStart = null;
+      saveState();
+      render(end);
+    }
+
+    function adjustStart() {
+      const timeVal = document.getElementById('adjustTime').value; // HH:MM
+      const daySel = document.getElementById('adjustDay').value;
+      if (!timeVal) { alert('Pick a time'); return; }
+      const [hh, mm] = timeVal.split(':').map(Number);
+      const base = new Date();
+      if (daySel === 'yesterday') base.setDate(base.getDate() - 1);
+      base.setHours(hh, mm, 0, 0);
+      state.runningStart = base.toISOString();
+      saveState();
+      render(new Date());
+    }
+
+    document.getElementById('startBtn').addEventListener('click', () => startFast());
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      if (confirm('Stop the current fast and save it to history?')) stopFast();
+    });
+    document.getElementById('adjustBtn').addEventListener('click', adjustStart);
+    document.getElementById('prevDay').addEventListener('click', () => {
+      if (selectedDayIndex > 0) { selectedDayIndex--; render(new Date()); }
+    });
+    document.getElementById('nextDay').addEventListener('click', () => {
+      if (selectedDayIndex < 27) { selectedDayIndex++; render(new Date()); }
+    });
+    document.getElementById('jumpToday').addEventListener('click', () => {
+      const t = planDayIndexForDate(new Date());
+      selectedDayIndex = t == null ? 0 : t;
+      render(new Date());
+    });
+
+    // Prefill adjust time from running start or 23:01
+    (function initAdjustDefaults() {
+      const info = runningFastInfo(new Date());
+      const src = info ? info.start : new Date(PRESEED_START_ISO);
+      document.getElementById('adjustTime').value = pad(src.getHours()) + ':' + pad(src.getMinutes());
+      const today = ymdLocal(new Date());
+      const yest = ymdLocal(addDays(new Date(), -1));
+      const y = ymdLocal(src);
+      document.getElementById('adjustDay').value = (y === yest) ? 'yesterday' : 'today';
+    })();
+
+    ensureSelected();
+    render(new Date());
+    tickTimer = setInterval(() => render(new Date()), 1000);
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  })();
+  </script>
+</body>
+</html>
