@@ -918,12 +918,17 @@ selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});}
   if(v!==null){var n=parseInt(String(v).replace(/[^0-9]/g,''),10);
     if(!isNaN(n)){log[dkey(new Date())]={n:n,t:Date.now()};try{localStorage.setItem(KEY,JSON.stringify(log));}catch(e){}}
     q.delete('steps');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);}
-  function show(){var e=log[dkey(new Date())];
+  var viewDate=null;
+  function show(){var d=viewDate||new Date(), isToday=dkey(d)===dkey(new Date()), e=log[dkey(d)];
+    var card=document.getElementById('stepsCard'), h=card.querySelector('h2');
     var num=document.getElementById('stepsNum'),bar=document.getElementById('stepsBar'),meta=document.getElementById('stepsMeta');
-    var card=document.getElementById('stepsCard');card.hidden=!e;if(!e){num.textContent='—';bar.style.width='0';meta.textContent='Tap your Steps shortcut to sync from Health. Goal '+GOAL.toLocaleString()+'.';return;}
+    h.textContent=isToday?'Steps today':'Steps · '+d.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
+    card.hidden=!e && isToday;
+    if(!e){num.textContent='—';bar.style.width='0';meta.textContent=isToday?'Tap your Steps shortcut to sync from Health.':'No steps synced that day.';return;}
     num.textContent=e.n.toLocaleString();bar.style.width=Math.min(100,e.n/GOAL*100)+'%';
     var left=GOAL-e.n, t=new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-    meta.textContent=(left>0?left.toLocaleString()+' to go to '+GOAL.toLocaleString():'Goal hit · '+GOAL.toLocaleString()+'+')+' · synced '+t;}
+    meta.textContent=(left>0?left.toLocaleString()+' to go to '+GOAL.toLocaleString():'Goal hit · '+GOAL.toLocaleString()+'+')+(isToday?' · synced '+t:'');}
+  window.stepsFor=function(d){viewDate=d?new Date(d):null;show();};
   show(); setInterval(show,60000);
 })();
 </script>
@@ -935,7 +940,7 @@ selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});}
   function k(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
   function show(){var d=day();
     lbl.textContent=off===0?'Today':off===-1?'Yesterday':off===1?'Tomorrow':d.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
-    ta.value=notes[k(d)]||'';  saved.textContent='Saves automatically for this day.';}
+    ta.value=notes[k(d)]||''; if(window.stepsFor) window.stepsFor(off===0?null:d);  saved.textContent='Saves automatically for this day.';}
   ta.addEventListener('input',function(){var key=k(day());if(ta.value.trim())notes[key]=ta.value;else delete notes[key];
     clearTimeout(t);t=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(notes));saved.textContent='Saved ✓';}catch(e){saved.textContent='Could not save';}},300);});
   document.getElementById('notePrev').addEventListener('click',function(){off--;show();});
