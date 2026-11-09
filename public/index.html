@@ -350,9 +350,11 @@
               <th>Type</th>
               <th>Start</th>
               <th>End</th>
+              <th style="text-align:right">Steps</th>
             </tr>
           </thead>
           <tbody id="weekBody"></tbody>
+          <tfoot><tr id="weekStepsTotal" class="meta"></tr></tfoot>
         </table>
       </div>
     </section>
@@ -687,7 +689,16 @@
       body.innerHTML = '';
       const todayIdx = planDayIndexForDate(now);
       const start = weekView * 7;
+      let stepLog = {}; try { stepLog = JSON.parse(localStorage.getItem('fastingSteps') || '{}'); } catch (e) {}
+      const sk = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+      const todayMid = new Date(now); todayMid.setHours(0,0,0,0);
+      let wkTotal = 0, wkDays = 0;
       for (let i = start; i < start + 7; i++) {
+        const dd = dateForPlanDay(i); const dm = new Date(dd); dm.setHours(0,0,0,0);
+        const se = stepLog[sk(dd)];
+        let stepsText;
+        if (dm > todayMid) stepsText = '<span class="meta">—</span>';
+        else { const n = se ? se.n : 0; wkTotal += n; wkDays++; stepsText = n.toLocaleString() + (n >= 15000 ? ' ✓' : ''); }
         const win = plannedWindow(i);
         const st = dayStatus(i, now);
         const tr = document.createElement('tr');
@@ -700,12 +711,16 @@
           '<td>D' + (i + 1) + '<div class="meta">' + formatShortDate(dateForPlanDay(i)) + '</div></td>' +
           '<td>' + win.type + '</td>' +
           '<td class="start">' + startText + '</td>' +
-          '<td>8 PM</td>';
+          '<td>8 PM</td>' +
+          '<td style="text-align:right;white-space:nowrap">' + stepsText + '</td>';
         tr.style.cursor = 'pointer';
         if (i === selectedDayIndex) tr.classList.add('picked');
         tr.addEventListener('click', () => { selectedDayIndex = i; render(new Date()); if (window.noteGoTo) window.noteGoTo(dateForPlanDay(i)); });
         body.appendChild(tr);
       }
+      document.getElementById('weekStepsTotal').innerHTML = wkDays
+        ? '<td colspan="5" style="text-align:right">Week total ' + wkTotal.toLocaleString() + ' · avg ' + Math.round(wkTotal / wkDays).toLocaleString() + '/day</td>'
+        : '<td colspan="5" style="text-align:right">Week not started</td>';
     }
 
     function renderHistory() {
@@ -916,7 +931,7 @@ selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});}
   var log={}; try{log=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){}
   var q=new URLSearchParams(location.search), v=q.get('steps');
   if(v!==null){var n=parseInt(String(v).replace(/[^0-9]/g,''),10);
-    if(!isNaN(n)){log[dkey(new Date())]={n:n,t:Date.now()};try{localStorage.setItem(KEY,JSON.stringify(log));}catch(e){}}
+    if(!isNaN(n)){log[dkey(new Date())]={n:n,t:Date.now()};try{localStorage.setItem(KEY,JSON.stringify(log));}catch(e){} if(typeof render==='function')try{render(new Date());}catch(e){}}
     q.delete('steps');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);}
   var viewDate=null;
   function show(){var d=viewDate||new Date(), isToday=dkey(d)===dkey(new Date()), e=log[dkey(d)];
