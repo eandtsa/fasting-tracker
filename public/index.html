@@ -745,11 +745,19 @@
       renderHistory();
     }
 
+    function triggerAlarm() {
+      const info = runningFastInfo(new Date());
+      if (!info) return;
+      const e = info.end, hhmm = String(e.getHours()).padStart(2,'0') + ':' + String(e.getMinutes()).padStart(2,'0');
+      setTimeout(() => { location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent('Fast Alarm') + '&input=text&text=' + encodeURIComponent(hhmm); }, 300);
+    }
+
     function startFast(at) {
       const when = at || new Date();
       state.runningStart = when.toISOString();
       saveState();
       render(new Date());
+      triggerAlarm();
     }
 
     function stopFast() {
@@ -777,6 +785,7 @@
       state.runningStart = base.toISOString();
       saveState();
       render(new Date());
+      triggerAlarm();
     }
 
     document.getElementById('startBtn').addEventListener('click', () => startFast());
