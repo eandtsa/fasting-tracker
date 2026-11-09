@@ -263,6 +263,7 @@
     .steps-num { font:800 2.2rem/1.1 system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums; }
     .steps-bar { height:10px; border-radius:6px; background:rgba(127,127,127,.25); overflow:hidden; margin:10px 0 6px; }
     .steps-bar > div { height:100%; background:linear-gradient(90deg,#14b8a6,#22c55e); width:0; transition:width .4s; }
+    tr.picked { box-shadow: inset 4px 0 0 #14b8a6; }
   </style>
 </head>
 <body>
@@ -701,7 +702,8 @@
           '<td class="start">' + startText + '</td>' +
           '<td>8 PM</td>';
         tr.style.cursor = 'pointer';
-        tr.addEventListener('click', () => { selectedDayIndex = i; render(new Date()); });
+        if (i === selectedDayIndex) tr.classList.add('picked');
+        tr.addEventListener('click', () => { selectedDayIndex = i; render(new Date()); if (window.noteGoTo) window.noteGoTo(dateForPlanDay(i)); });
         body.appendChild(tr);
       }
     }
@@ -932,12 +934,14 @@ selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});}
   function day(){var d=new Date();d.setDate(d.getDate()+off);return d;}
   function k(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
   function show(){var d=day();
-    lbl.textContent=off===0?'Today':off===-1?'Yesterday':d.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
-    ta.value=notes[k(d)]||''; document.getElementById('noteNext').disabled=off>=0; saved.textContent='Saves automatically for this day.';}
+    lbl.textContent=off===0?'Today':off===-1?'Yesterday':off===1?'Tomorrow':d.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
+    ta.value=notes[k(d)]||'';  saved.textContent='Saves automatically for this day.';}
   ta.addEventListener('input',function(){var key=k(day());if(ta.value.trim())notes[key]=ta.value;else delete notes[key];
     clearTimeout(t);t=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(notes));saved.textContent='Saved ✓';}catch(e){saved.textContent='Could not save';}},300);});
   document.getElementById('notePrev').addEventListener('click',function(){off--;show();});
-  document.getElementById('noteNext').addEventListener('click',function(){if(off<0){off++;show();}});
+  document.getElementById('noteNext').addEventListener('click',function(){off++;show();});
+  window.noteGoTo=function(d){var a=new Date();a.setHours(0,0,0,0);var b2=new Date(d);b2.setHours(0,0,0,0);off=Math.round((b2-a)/864e5);show();
+    document.getElementById('notesCard').scrollIntoView({behavior:'smooth',block:'start'});};
   show();
 })();
 </script>
