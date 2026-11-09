@@ -360,6 +360,17 @@
       <h2>History</h2>
       <div id="historyList" class="empty">No completed fasts yet.</div>
     </section>
+
+    <section class="card" id="notesCard">
+      <h2>Notes</h2>
+      <div class="nav-day">
+        <button class="btn-ghost" id="notePrev" type="button">‹</button>
+        <strong id="noteDate">Today</strong>
+        <button class="btn-ghost" id="noteNext" type="button">›</button>
+      </div>
+      <textarea id="noteText" rows="4" placeholder="How did today go? Hunger, energy, workout, meals…" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;font:inherit;font-size:16px;background:rgba(127,127,127,.12);color:inherit;border:1px solid rgba(127,127,127,.3);resize:vertical"></textarea>
+      <div class="hint" id="noteSaved">Saves automatically for this day.</div>
+    </section>
   </div>
 
   <script>
@@ -912,6 +923,22 @@ selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});}
     var left=GOAL-e.n, t=new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     meta.textContent=(left>0?left.toLocaleString()+' to go to '+GOAL.toLocaleString():'Goal hit · '+GOAL.toLocaleString()+'+')+' · synced '+t;}
   show(); setInterval(show,60000);
+})();
+</script>
+<script>
+(function(){
+  var KEY='fastingNotes', notes={}; try{notes=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){}
+  var off=0, ta=document.getElementById('noteText'), lbl=document.getElementById('noteDate'), saved=document.getElementById('noteSaved'), t;
+  function day(){var d=new Date();d.setDate(d.getDate()+off);return d;}
+  function k(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+  function show(){var d=day();
+    lbl.textContent=off===0?'Today':off===-1?'Yesterday':d.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
+    ta.value=notes[k(d)]||''; document.getElementById('noteNext').disabled=off>=0; saved.textContent='Saves automatically for this day.';}
+  ta.addEventListener('input',function(){var key=k(day());if(ta.value.trim())notes[key]=ta.value;else delete notes[key];
+    clearTimeout(t);t=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(notes));saved.textContent='Saved ✓';}catch(e){saved.textContent='Could not save';}},300);});
+  document.getElementById('notePrev').addEventListener('click',function(){off--;show();});
+  document.getElementById('noteNext').addEventListener('click',function(){if(off<0){off++;show();}});
+  show();
 })();
 </script>
 </body>
