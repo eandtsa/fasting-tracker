@@ -786,11 +786,11 @@
 
     ensureSelected();
     render(new Date());
-    tickTimer = setInterval(() => render(new Date()), 1000);
+    tickTimer = setInterval(() => { const n = new Date(); renderTimer(n); renderChip(n); if (n.getSeconds() === 0) render(n); }, 1000);
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {}); let _rl = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if (_rl) return; _rl = true; location.reload(); });
       });
     }
   })();
