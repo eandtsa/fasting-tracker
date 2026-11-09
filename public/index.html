@@ -645,7 +645,7 @@
         b.type = 'button';
         b.className = 'btn-small' + (w === weekView ? ' active' : '');
         b.textContent = 'Week ' + (w + 1);
-        b.addEventListener('click', () => { weekView = w; render(now); });
+        b.addEventListener('click', () => { selectedDayIndex = w * 7 + (selectedDayIndex % 7); render(new Date()); });
         tabs.appendChild(b);
       }
       const body = document.getElementById('weekBody');
@@ -831,6 +831,13 @@
   var i=((day%Q.length)+Q.length)%Q.length;
   document.getElementById('dailyQuote').textContent='\u201C'+Q[i]+'\u201D';
 })();
+</script>
+<script>
+(function(){var el=document.getElementById('weekCard'),x0=null,y0=null;
+el.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
+el.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;
+if(Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy))return;var w=Math.floor(selectedDayIndex/7)+(dx<0?1:-1);if(w<0||w>3)return;
+selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});})();
 </script>
 </body>
 </html>

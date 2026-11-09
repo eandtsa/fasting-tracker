@@ -1,4 +1,4 @@
-const CACHE = 'fasting-v2';
+const CACHE = 'fasting-v3';
 const ASSETS = [
   './',
   './index.html',
