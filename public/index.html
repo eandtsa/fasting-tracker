@@ -247,14 +247,14 @@
     .nav-day { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
     .hint { font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
     .quote { margin: 4px 0 14px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(135deg,#1f1f1f,#3a1010); color:#fff; font-weight: 800; font-size: 1.08rem; line-height: 1.35; letter-spacing: .01em; border-left: 5px solid #e53935; }
-    .flapclock { display:flex; justify-content:center; align-items:center; gap:4px; margin:8px 0 6px; }
-    .flapclock .sep { font:800 40px/64px ui-monospace,Menlo,monospace; color:#888; padding:0 2px; }
-    .flap { position:relative; width:42px; height:64px; perspective:300px; font:800 46px/64px ui-monospace,Menlo,"SF Mono",monospace; color:#f5f5f5; text-align:center; }
+    .flapclock { display:flex; justify-content:center; align-items:center; gap:3px; margin:8px 0 6px; }
+    .flapclock .sep { font:800 52px/84px ui-monospace,Menlo,monospace; color:#888; padding:0; width:14px; text-align:center; }
+    .flap { position:relative; width:46px; height:84px; perspective:400px; font:800 66px/84px ui-monospace,Menlo,"SF Mono",monospace; color:#f5f5f5; text-align:center; }
     .flap .h { position:absolute; left:0; right:0; height:50%; overflow:hidden; background:#1c1c1c; backface-visibility:hidden; }
-    .flap .h > i { display:block; font-style:normal; height:64px; }
+    .flap .h > i { display:block; font-style:normal; height:84px; }
     .flap .t { top:0; border-radius:6px 6px 0 0; transform-origin:50% 100%; background:#262626; }
     .flap .b { bottom:0; border-radius:0 0 6px 6px; transform-origin:50% 0; }
-    .flap .b > i { margin-top:-32px; }
+    .flap .b > i { margin-top:-42px; }
     .flap::after { content:""; position:absolute; left:0; right:0; top:50%; height:2px; margin-top:-1px; background:#000; z-index:5; }
     .flap .ft { z-index:3; animation:flapTop .22s ease-in forwards; }
     .flap .fb { z-index:3; transform:rotateX(90deg); animation:flapBot .22s .22s ease-out forwards; }
