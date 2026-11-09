@@ -261,7 +261,7 @@
     @keyframes flapTop { to { transform:rotateX(-90deg); } }
     @keyframes flapBot { to { transform:rotateX(0deg); } }
     .steps-num { font:800 2.2rem/1.1 system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums; }
-    .steps-bar { height:10px; border-radius:6px; background:#e5e7eb; overflow:hidden; margin:10px 0 6px; }
+    .steps-bar { height:10px; border-radius:6px; background:rgba(127,127,127,.25); overflow:hidden; margin:10px 0 6px; }
     .steps-bar > div { height:100%; background:linear-gradient(90deg,#14b8a6,#22c55e); width:0; transition:width .4s; }
   </style>
 </head>
@@ -274,7 +274,7 @@
 
     <div class="quote" id="dailyQuote"></div>
 
-    <section class="card" id="stepsCard">
+    <section class="card" id="stepsCard" hidden>
       <h2>Steps today</h2>
       <div class="steps-num" id="stepsNum">—</div>
       <div class="steps-bar"><div id="stepsBar"></div></div>
@@ -898,7 +898,7 @@ selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});}
     q.delete('steps');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);}
   function show(){var e=log[dkey(new Date())];
     var num=document.getElementById('stepsNum'),bar=document.getElementById('stepsBar'),meta=document.getElementById('stepsMeta');
-    if(!e){num.textContent='—';bar.style.width='0';meta.textContent='Tap your Steps shortcut to sync from Health. Goal '+GOAL.toLocaleString()+'.';return;}
+    var card=document.getElementById('stepsCard');card.hidden=!e;if(!e){num.textContent='—';bar.style.width='0';meta.textContent='Tap your Steps shortcut to sync from Health. Goal '+GOAL.toLocaleString()+'.';return;}
     num.textContent=e.n.toLocaleString();bar.style.width=Math.min(100,e.n/GOAL*100)+'%';
     var left=GOAL-e.n, t=new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     meta.textContent=(left>0?left.toLocaleString()+' to go to '+GOAL.toLocaleString():'Goal hit · '+GOAL.toLocaleString()+'+')+' · synced '+t;}
