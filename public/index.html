@@ -275,7 +275,7 @@
 
     <div class="quote" id="dailyQuote"></div>
 
-    <section class="card" id="stepsCard" hidden>
+    <section class="card" id="stepsCard">
       <h2>Steps today</h2>
       <div class="steps-num" id="stepsNum">—</div>
       <div class="steps-bar"><div id="stepsBar"></div></div>
@@ -923,8 +923,8 @@ selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});}
     var card=document.getElementById('stepsCard'), h=card.querySelector('h2');
     var num=document.getElementById('stepsNum'),bar=document.getElementById('stepsBar'),meta=document.getElementById('stepsMeta');
     h.textContent=isToday?'Steps today':'Steps · '+d.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
-    card.hidden=!e && isToday;
-    if(!e){num.textContent='—';bar.style.width='0';meta.textContent=isToday?'Tap your Steps shortcut to sync from Health.':'No steps synced that day.';return;}
+    card.hidden=false;
+    if(!e){num.textContent='0';bar.style.width='0';meta.textContent=isToday?'Tap your Steps shortcut to sync from Health.':'No steps synced that day.';return;}
     num.textContent=e.n.toLocaleString();bar.style.width=Math.min(100,e.n/GOAL*100)+'%';
     var left=GOAL-e.n, t=new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     meta.textContent=(left>0?left.toLocaleString()+' to go to '+GOAL.toLocaleString():'Goal hit · '+GOAL.toLocaleString()+'+')+(isToday?' · synced '+t:'');}
