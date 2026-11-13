@@ -1,7 +1,7 @@
 {
-  "name": "28 Day Fast",
+  "name": "Fasting",
   "short_name": "Fasting",
-  "description": "28-day intermittent fasting tracker",
+  "description": "Intermittent fasting tracker through race day",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0f172a",

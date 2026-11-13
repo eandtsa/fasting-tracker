@@ -1,6 +1,6 @@
 # Fasting
 
-A mobile-friendly 28-day intermittent fasting tracker (static PWA).
+A mobile-friendly intermittent fasting tracker (static PWA) through race day.
 
 Open `public/index.html` locally, or use the hosted Pages URL after deploy.
 

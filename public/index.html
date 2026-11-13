@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Fasting" />
-  <meta name="description" content="28-day intermittent fasting tracker" />
+  <meta name="description" content="Intermittent fasting tracker through race day" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -270,7 +270,7 @@
   <div class="wrap">
     <header class="app">
       <h1>Fasting</h1>
-      <div class="chip" id="planChip">28-day plan</div>
+      <div class="chip" id="planChip">Race plan</div>
     </header>
 
     <div class="quote" id="dailyQuote"></div>
@@ -382,23 +382,28 @@
     const PLAN_START = '2026-11-09'; // Monday local
     const PRESEED_START_ISO = '2026-11-09T04:01:00.000Z'; // 11:01 PM ET Sun Nov 8
 
+    // 11/9–11/12 kept as originally planned. Fri 11/13–Sat 12/12 (race day):
+    // Mon/Wed/Fri = OMAD 21:3 (5–8 PM); Tue/Thu/Sat/Sun = 18:6 (2–8 PM). No cheat days from 11/13 on.
     const DAY_TYPES = [
-      '16:8','16:8','18:6','Cheat','16:8','16:8','18:6',
-      '18:6','Cheat','16:8','16:8','18:6','14:10','Cheat',
-      '16:8','16:8','18:6','14:10','Cheat','16:8','18:6',
-      '18:6','14:10','Cheat','16:8','18:6','14:10','16:8'
+      '16:8','16:8','18:6','Cheat','21:3','18:6','18:6',
+      '21:3','18:6','21:3','18:6','21:3','18:6','18:6',
+      '21:3','18:6','21:3','18:6','21:3','18:6','18:6',
+      '21:3','18:6','21:3','18:6','21:3','18:6','18:6',
+      '21:3','18:6','21:3','18:6','21:3','18:6'
     ];
+    const PLAN_DAYS = DAY_TYPES.length; // 34, through Sat 12/12
+    const WEEK_COUNT = Math.ceil(PLAN_DAYS / 7); // 5; last week is Mon–Sat
 
-    const OPEN_HOURS = { '16:8': 12, '18:6': 14, '14:10': 10, 'Cheat': null };
+    const OPEN_HOURS = { '16:8': 12, '18:6': 14, '14:10': 10, '21:3': 17, 'Cheat': null };
     const CLOSE_HOUR = 20;
-    const GOAL_HOURS = { '16:8': 16, '18:6': 18, '14:10': 14, 'Cheat': 16 };
+    const GOAL_HOURS = { '16:8': 16, '18:6': 18, '14:10': 14, '21:3': 21, 'Cheat': 16 };
 
     const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
     let state = loadState();
     let selectedDayIndex = null; // 0-based plan day
-    let weekView = 0; // 0-3
+    let weekView = 0; // 0-based week
     let tickTimer = null;
 
     function loadState() {
@@ -449,7 +454,7 @@
       const start = parseYmd(PLAN_START);
       const cur = parseYmd(ymdLocal(d));
       const diff = Math.round((cur - start) / 86400000);
-      if (diff < 0 || diff > 27) return null;
+      if (diff < 0 || diff >= PLAN_DAYS) return null;
       return diff;
     }
 
@@ -481,6 +486,10 @@
       return formatTime(d) + ', ' + dayLabel;
     }
 
+    function displayType(type) {
+      return type === '21:3' ? 'OMAD' : type;
+    }
+
     function plannedOpenHour(type) {
       if (type === 'Cheat') return null;
       return OPEN_HOURS[type];
@@ -495,7 +504,8 @@
       }
       const openH = plannedOpenHour(type);
       const open = new Date(date.getFullYear(), date.getMonth(), date.getDate(), openH, 0, 0, 0);
-      return { type, open, close, label: type };
+      const label = type === '21:3' ? 'OMAD · 21:3' : type;
+      return { type, open, close, label };
     }
 
     function goalHoursForFastEnd(endDate) {
@@ -505,21 +515,30 @@
       return GOAL_HOURS[type] || 16;
     }
 
+    function goalHoursForRunningStart(start) {
+      // Goal hours = plan type of the day the fast ends on.
+      // Try 21h first so OMAD days resolve correctly, then 18/16/14.
+      // A match means start+H lands on a day whose type has goal H.
+      // Fallback: use the day at start+21h (covers evening 8 PM starts for both 18:6 and 21:3).
+      const candidates = [21, 18, 16, 14];
+      for (let i = 0; i < candidates.length; i++) {
+        const h = candidates[i];
+        const endGuess = new Date(start.getTime() + h * 3600 * 1000);
+        if (goalHoursForFastEnd(endGuess) === h) return h;
+      }
+      const probe = new Date(start.getTime() + 21 * 3600 * 1000);
+      return goalHoursForFastEnd(probe);
+    }
+
     function runningFastInfo(now) {
       if (!state.runningStart) return null;
       const start = new Date(state.runningStart);
       if (isNaN(start.getTime())) return null;
-      // Goal hours = plan type of the day the fast ends on = start + goalHours' calendar day.
-      // Spec: Fast goal hours = the plan type of the day the fast ends on (start+16h's plan day; cheat or out of range = 16h).
-      // Interpretation: look at start+16h to pick the day, then use THAT day's type for actual goal hours.
-      const probe = new Date(start.getTime() + 16 * 3600 * 1000);
-      const goalH = goalHoursForFastEnd(probe);
-      // Recheck: if goal is 18, the end day might differ from start+16h day. Spec says use start+16h's plan day.
-      // So goal hours come from the type of (start+16h)'s day.
+      const goalH = goalHoursForRunningStart(start);
       const end = new Date(start.getTime() + goalH * 3600 * 1000);
       const elapsedMs = Math.max(0, now - start);
       const leftMs = end - now;
-      return { start, end, goalH, elapsedMs, leftMs, probeDayIndex: planDayIndexForDate(probe) };
+      return { start, end, goalH, elapsedMs, leftMs, probeDayIndex: planDayIndexForDate(end) };
     }
 
     function overrideOpenForDay(dayIndex, now) {
@@ -561,7 +580,7 @@
       }
 
       if (!isToday) {
-        return { text: win.type, cls: 'fasting', open, close, override: !!overrideOpen };
+        return { text: displayType(win.type), cls: 'fasting', open, close, override: !!overrideOpen };
       }
 
       if (state.runningStart && now < (runningFastInfo(now)?.end || 0)) {
@@ -571,7 +590,7 @@
       if (open && now < open) return { text: 'Fasting', cls: 'fasting', open, close, override: !!overrideOpen };
       if (now >= close) return { text: 'Kitchen closed', cls: 'closed', open, close, override: !!overrideOpen };
       if (open && now >= open && now < close) return { text: 'Eating window open', cls: 'eating', open, close, override: !!overrideOpen };
-      return { text: win.type, cls: 'fasting', open, close, override: !!overrideOpen };
+      return { text: displayType(win.type), cls: 'fasting', open, close, override: !!overrideOpen };
     }
 
     function ensureSelected() {
@@ -588,22 +607,23 @@
       const elTitle = document.getElementById('tomorrowTitle');
       const elMeta = document.getElementById('tomorrowMeta');
       if (idx == null) {
-        elTitle.textContent = 'Outside the 28-day plan';
+        elTitle.textContent = 'Outside the plan';
         elMeta.textContent = formatShortDate(tom);
         return;
       }
       const win = plannedWindow(idx);
       const override = overrideOpenForDay(idx, now);
       const open = override || win.open;
-      elTitle.textContent = 'Day ' + (idx + 1) + ' · ' + win.type;
+      elTitle.textContent = 'Day ' + (idx + 1) + ' · ' + displayType(win.type);
       if (win.type === 'Cheat') {
         elMeta.textContent = formatShortDate(tom) + ' · Cheat day · kitchen closes 8 PM';
       } else {
+        const extra = win.type === '21:3' ? ' · one meal' : '';
         elMeta.innerHTML =
           formatShortDate(tom) +
           '<br>Start eating at <strong>' + formatTime(open) + '</strong>' +
           (override ? ' <span style="color:var(--teal)">(from your timer)</span>' : '') +
-          '<br>Closes 8 PM · ' + win.type + ' fast';
+          '<br>Closes 8 PM · ' + win.label + ' fast' + extra;
       }
     }
 
@@ -657,32 +677,36 @@
       const date = dateForPlanDay(idx);
       const win = plannedWindow(idx);
       const st = dayStatus(idx, now);
-      document.getElementById('dayTitle').textContent = 'Day ' + (idx + 1) + ' · ' + win.type;
+      document.getElementById('dayTitle').textContent = 'Day ' + (idx + 1) + ' · ' + displayType(win.type);
       document.getElementById('daySubtitle').textContent = formatShortDate(date);
       if (win.type === 'Cheat') {
         document.getElementById('dayWindow').textContent = 'Cheat day · kitchen closes 8 PM';
       } else {
         document.getElementById('dayWindow').textContent =
           'Eating window: ' + formatTime(st.open) + ' – 8 PM' +
+          (win.type === '21:3' ? ' · one meal' : '') +
           (st.override ? ' (start from your timer)' : '');
       }
       const badge = document.getElementById('dayStatus');
       badge.className = 'status ' + st.cls;
       badge.textContent = st.text;
       document.getElementById('prevDay').disabled = idx <= 0;
-      document.getElementById('nextDay').disabled = idx >= 27;
+      document.getElementById('nextDay').disabled = idx >= PLAN_DAYS - 1;
     }
 
     function renderWeek(now) {
       ensureSelected();
       const tabs = document.getElementById('weekTabs');
       tabs.innerHTML = '';
-      for (let w = 0; w < 4; w++) {
+      for (let w = 0; w < WEEK_COUNT; w++) {
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'btn-small' + (w === weekView ? ' active' : '');
         b.textContent = 'Week ' + (w + 1);
-        b.addEventListener('click', () => { selectedDayIndex = w * 7 + (selectedDayIndex % 7); render(new Date()); });
+        b.addEventListener('click', () => {
+          selectedDayIndex = Math.min(PLAN_DAYS - 1, w * 7 + (selectedDayIndex % 7));
+          render(new Date());
+        });
         tabs.appendChild(b);
       }
       const body = document.getElementById('weekBody');
@@ -693,7 +717,7 @@
       const sk = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
       const todayMid = new Date(now); todayMid.setHours(0,0,0,0);
       let wkTotal = 0, wkDays = 0;
-      for (let i = start; i < start + 7; i++) {
+      for (let i = start; i < Math.min(start + 7, PLAN_DAYS); i++) {
         const dd = dateForPlanDay(i); const dm = new Date(dd); dm.setHours(0,0,0,0);
         const se = stepLog[sk(dd)];
         let stepsText;
@@ -709,7 +733,7 @@
           : (win.type === 'Cheat' ? '—' : '—');
         tr.innerHTML =
           '<td>D' + (i + 1) + '<div class="meta">' + formatShortDate(dateForPlanDay(i)) + '</div></td>' +
-          '<td>' + win.type + '</td>' +
+          '<td>' + displayType(win.type) + '</td>' +
           '<td class="start">' + startText + '</td>' +
           '<td>8 PM</td>' +
           '<td style="text-align:right;white-space:nowrap">' + stepsText + '</td>';
@@ -760,7 +784,7 @@
       const idx = planDayIndexForDate(now);
       const chip = document.getElementById('planChip');
       if (idx == null) chip.textContent = 'Outside plan';
-      else chip.textContent = 'Day ' + (idx + 1) + ' of 28';
+      else chip.textContent = 'Day ' + (idx + 1) + ' of ' + PLAN_DAYS;
     }
 
     function render(now) {
@@ -825,7 +849,7 @@
       if (selectedDayIndex > 0) { selectedDayIndex--; render(new Date()); }
     });
     document.getElementById('nextDay').addEventListener('click', () => {
-      if (selectedDayIndex < 27) { selectedDayIndex++; render(new Date()); }
+      if (selectedDayIndex < PLAN_DAYS - 1) { selectedDayIndex++; render(new Date()); }
     });
     document.getElementById('jumpToday').addEventListener('click', () => {
       const t = planDayIndexForDate(new Date());
@@ -847,6 +871,27 @@
     ensureSelected();
     render(new Date());
     tickTimer = setInterval(() => { const n = new Date(); renderTimer(n); renderChip(n); if (n.getSeconds() === 0) render(n); }, 1000);
+
+    window.render = render;
+
+    (function weekSwipe() {
+      const el = document.getElementById('weekCard');
+      let x0 = null, y0 = null;
+      el.addEventListener('touchstart', function (e) {
+        x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+      }, { passive: true });
+      el.addEventListener('touchend', function (e) {
+        if (x0 == null) return;
+        const dx = e.changedTouches[0].clientX - x0;
+        const dy = e.changedTouches[0].clientY - y0;
+        x0 = null;
+        if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+        const w = Math.floor(selectedDayIndex / 7) + (dx < 0 ? 1 : -1);
+        if (w < 0 || w >= WEEK_COUNT) return;
+        selectedDayIndex = Math.min(PLAN_DAYS - 1, w * 7 + (selectedDayIndex % 7));
+        render(new Date());
+      }, { passive: true });
+    })();
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -891,13 +936,6 @@
   var i=((day%Q.length)+Q.length)%Q.length;
   document.getElementById('dailyQuote').textContent='\u201C'+Q[i]+'\u201D';
 })();
-</script>
-<script>
-(function(){var el=document.getElementById('weekCard'),x0=null,y0=null;
-el.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
-el.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;
-if(Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy))return;var w=Math.floor(selectedDayIndex/7)+(dx<0?1:-1);if(w<0||w>3)return;
-selectedDayIndex=w*7+(selectedDayIndex%7);render(new Date());},{passive:true});})();
 </script>
 <script>
 (function(){
